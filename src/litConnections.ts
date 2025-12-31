@@ -21,14 +21,15 @@ export const connectToLitNodes = async () => {
   return litNodeClient;
 };
 
+import * as ethersV5 from "ethers-v5";
+
 async function setupLitContracts(provider: any) {
-  // 在 ethers v6 中，BrowserProvider 接受 EIP-1193 provider
-  const ethersProvider = new ethers.BrowserProvider(provider);
-  // 直接获取 signer，ethers 会自动处理必要的请求
-  const signer = await ethersProvider.getSigner();
+  // LitContracts v7 必须使用 ethers v5 的 Signer/Provider
+  const ethersV5Provider = new ethersV5.providers.Web3Provider(provider);
+  const signer = ethersV5Provider.getSigner();
 
   const litContracts = new LitContracts({
-    signer,
+    signer: signer as any,
     network: LIT_NET,
   });
   await litContracts.connect();
