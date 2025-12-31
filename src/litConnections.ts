@@ -6,7 +6,6 @@ import {
   LitActionResource,
 } from "@lit-protocol/auth-helpers";
 import Hash from "typestub-ipfs-only-hash";
-import * as ethers from "ethers";
 
 import { litActionCode } from "./litAction";
 
