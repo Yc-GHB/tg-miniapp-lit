@@ -4,16 +4,16 @@ import { mainnet, sepolia, polygon, bsc, arbitrum } from '@reown/appkit/networks
 
 // 定义 Chronicle Yellowstone 网络 (Lit Protocol 测试网)
 const yellowstone = {
-  id: 175177,
+  id: 175188,
   name: 'Chronicle Yellowstone',
   network: 'chronicle-yellowstone',
-  nativeCurrency: { name: 'tLIT', symbol: 'tLIT', decimals: 18 },
+  nativeCurrency: { name: 'tstLPX', symbol: 'tstLPX', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://yellowstone-rpc.getlit.dev/'] },
-    public: { http: ['https://yellowstone-rpc.getlit.dev/'] },
+    default: { http: ['https://yellowstone-rpc.litprotocol.com/'] },
+    public: { http: ['https://yellowstone-rpc.litprotocol.com/'] },
   },
   blockExplorers: {
-    default: { name: 'Explorer', url: 'https://yellowstone-explorer.getlit.dev/' },
+    default: { name: 'Explorer', url: 'https://yellowstone-explorer.litprotocol.com/' },
   },
 } as const;
 
