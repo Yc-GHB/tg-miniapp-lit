@@ -23,8 +23,8 @@ export const connectToLitNodes = async () => {
 
 async function setupLitContracts(provider: any) {
   await provider.send("eth_requestAccounts", []);
-  const ethersProvider = new ethers.providers.Web3Provider(provider);
-  const signer = ethersProvider.getSigner();
+  const ethersProvider = new ethers.BrowserProvider(provider);
+  const signer = await ethersProvider.getSigner();
 
   const litContracts = new LitContracts({
     signer,
@@ -83,11 +83,11 @@ export const getSessionSignatures = async (
     },
     resourceAbilityRequests: [
       {
-        resource: new LitPKPResource("*"),
+        resource: new LitPKPResource("*") as any,
         ability: LIT_ABILITY.PKPSigning,
       },
       {
-        resource: new LitActionResource("*"),
+        resource: new LitActionResource("*") as any,
         ability: LIT_ABILITY.LitActionExecution,
       },
     ],
