@@ -22,7 +22,7 @@ const _litActionCode = async () => {
         for (const [key, value] of urlParams.entries()) {
           dataCheckString += `${key}=${value}\n`;
         }
-        dataCheckString = dataCheckString.slice(0, -1);
+        dataCheckString = dataCheckString?.slice(0, -1);
         
         const encoder = new TextEncoder();
         const secretKey = await crypto.subtle.importKey(

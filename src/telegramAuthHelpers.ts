@@ -19,7 +19,7 @@ export async function verifyInitData(
     for (const [key, value] of urlParams.entries()) {
       dataCheckString += `${key}=${value}\n`;
     }
-    dataCheckString = dataCheckString.slice(0, -1);
+    dataCheckString = dataCheckString?.slice(0, -1);
 
     const encoder = new TextEncoder();
     const secretKey = await window.crypto.subtle.importKey(

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useSDK } from "@metamask/sdk-react";
 
 import "./App.css";
 import litLogo from "./assets/lit.png";
@@ -12,7 +11,7 @@ import {
   isRecent,
   verifyInitData,
 } from "./telegramAuthHelpers";
-
+import { useWallet, appKit } from "./wallet";
 
 interface TelegramWebApp {
   ready: () => void;
@@ -34,7 +33,6 @@ declare global {
 
 function App() {
   const [webApp, setWebApp] = useState<TelegramWebApp | null>(null);
-  const [account, setAccount] = useState<string | null>(null);
   const [sessionSignatures, setSessionSignatures] = useState<any | null>(null);
   const [valid, setValid] = useState<boolean | null>(null);
   const [recent, setRecent] = useState<boolean | null>(null);
@@ -44,7 +42,11 @@ function App() {
     publicKey: string;
     ethAddress: string;
   } | null>(null);
-  const { sdk, connected, provider } = useSDK();
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 使用新的 wallet hook
+  const { isConnected, address, provider, connect, disconnect } = useWallet();
 
   useEffect(() => {
     const tgApp = window.Telegram?.WebApp;
@@ -58,7 +60,7 @@ function App() {
       });
 
       verifyInitData(tgApp.initData, import.meta.env.VITE_TELEGRAM_BOT_SECRET)
-        .then(( isVerified ) => {
+        .then((isVerified) => {
           setValid(isVerified);
         })
         .catch((error) => {
@@ -67,34 +69,100 @@ function App() {
     }
   }, []);
 
-  const connect = async () => {
-    try {
-      const accounts = await sdk?.connect();
-      setAccount(accounts?.[0]);
-      webApp!.showPopup({
+  // 监听连接成功
+  useEffect(() => {
+    if (isConnected && address && webApp) {
+      webApp.showPopup({
         title: "Connected",
-        message: `Connected to MetaMask with account: ${accounts[0]}`,
+        message: `Connected with account: ${address?.slice(0, 6)}...${address?.slice(-4)}`,
         buttons: [{ text: "Close", type: "close" }],
       });
-    } catch (err) {
+    }
+  }, [isConnected, address, webApp]);
+
+  const handleConnect = async () => {
+    try {
+      setError(null);
+      await connect();
+    } catch (err: any) {
       console.warn("failed to connect..", err);
+      setError(err.message || "Failed to connect wallet");
+    }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      await disconnect();
+      setPkp(null);
+      setSessionSignatures(null);
+    } catch (err: any) {
+      console.warn("failed to disconnect..", err);
     }
   };
 
   const mintPkp = async () => {
-    const pkp = await mintNewPkp(provider);
-    setPkp(pkp);
+    if (!provider) {
+      setError("Please connect wallet first");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // 获取底层 provider 用于 Lit Protocol
+      const walletProvider = appKit.getWalletProvider();
+      const pkp = await mintNewPkp(walletProvider);
+      setPkp(pkp);
+
+      if (webApp) {
+        webApp.showPopup({
+          title: "PKP Minted",
+          message: `Successfully minted PKP: ${pkp.ethAddress?.slice(0, 10)}...`,
+          buttons: [{ text: "Close", type: "close" }],
+        });
+      }
+    } catch (err: any) {
+      console.error("Failed to mint PKP:", err);
+      setError(err.message || "Failed to mint PKP");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getSessionSigs = async () => {
-    const litNodeClient = await connectToLitNodes();
-    const sessionSignatures = await getSessionSignatures(
-      litNodeClient,
-      pkp,
-      provider,
-      data
-    );
-    setSessionSignatures(sessionSignatures);
+    if (!pkp) {
+      setError("Please mint PKP first");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const litNodeClient = await connectToLitNodes();
+      const walletProvider = appKit.getWalletProvider();
+      const sessionSignatures = await getSessionSignatures(
+        litNodeClient,
+        pkp,
+        walletProvider,
+        data
+      );
+      setSessionSignatures(sessionSignatures);
+
+      if (webApp) {
+        webApp.showPopup({
+          title: "Success",
+          message: "Session signatures obtained successfully!",
+          buttons: [{ text: "Close", type: "close" }],
+        });
+      }
+    } catch (err: any) {
+      console.error("Failed to get session signatures:", err);
+      setError(err.message || "Failed to get session signatures");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -103,43 +171,103 @@ function App() {
         <img src={litLogo} className="App-logo" alt="logo" />
         <h1>Telegram Mini App</h1>
       </header>
-      {
-        <div>
-          <h3>Telegram User Data Validity:</h3>
-          <pre> Recent: {JSON.stringify(recent, null, 2)}</pre>
-          <pre> Valid: {JSON.stringify(valid, null, 2)}</pre>
+
+      {/* Telegram 验证状态 */}
+      <div className="status-section">
+        <h3>Telegram User Data Validity:</h3>
+        <div className="status-item">
+          <span>Recent:</span>
+          <span className={recent ? "status-valid" : "status-invalid"}>
+            {recent === null ? "Checking..." : recent ? "✓ Yes" : "✗ No"}
+          </span>
         </div>
-      }
-      <button style={{ padding: 10, margin: 10 }} onClick={connect}>
-        {connected ? "Connect to MetaMask" : "Connected"}
-      </button>
-      {connected && <div>{account && `Connected account: ${account}`}</div>}
-      {connected && (
-        <button style={{ padding: 10, margin: 10 }} onClick={getSessionSigs}>
-          Get Session Signatures
-        </button>
+        <div className="status-item">
+          <span>Valid:</span>
+          <span className={valid ? "status-valid" : "status-invalid"}>
+            {valid === null ? "Checking..." : valid ? "✓ Yes" : "✗ No"}
+          </span>
+        </div>
+      </div>
+
+      {/* 错误提示 */}
+      {error && (
+        <div className="error-message">
+          <p>❌ {error}</p>
+          <button onClick={() => setError(null)}>Dismiss</button>
+        </div>
       )}
-      {sessionSignatures && (
+
+      {/* 钱包连接区域 */}
+      <div className="wallet-section">
+        {!isConnected ? (
+          <button
+            className="connect-button"
+            onClick={handleConnect}
+            disabled={isLoading}
+          >
+            🔗 Connect Wallet
+          </button>
+        ) : (
+          <div className="wallet-info">
+            <div className="wallet-address">
+              <span>Connected:</span>
+              <code>{address?.slice(0, 6)}...{address?.slice(-4)}</code>
+            </div>
+            <button
+              className="disconnect-button"
+              onClick={handleDisconnect}
+            >
+              Disconnect
+            </button>
+          </div>
+        )}
+
+        {/* AppKit 内置的连接按钮组件 */}
+        <appkit-button />
+      </div>
+
+      {/* PKP 操作区域 */}
+      {isConnected && (
+        <div className="action-section">
+          <button
+            className="action-button"
+            onClick={mintPkp}
+            disabled={isLoading}
+          >
+            {isLoading ? "Minting..." : "🔑 Mint PKP"}
+          </button>
+
+          {pkp && (
+            <button
+              className="action-button"
+              onClick={getSessionSigs}
+              disabled={isLoading}
+            >
+              {isLoading ? "Getting Signatures..." : "✍️ Get Session Signatures"}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* PKP 信息显示 */}
+      {pkp && (
         <div className="boxed-code-display">
           <div className="boxed-code-display__container">
-            <h2 className="boxed-code-display__title">Session Signatures:</h2>
+            <h2 className="boxed-code-display__title">🔑 PKP:</h2>
             <pre className="boxed-code-display__content">
-              {JSON.stringify(sessionSignatures, null, 2)}
+              {JSON.stringify(pkp, null, 2)}
             </pre>
           </div>
         </div>
       )}
-      {connected && (
-        <button style={{ padding: 10, margin: 10 }} onClick={mintPkp}>
-          Mint PKP
-        </button>
-      )}
-      {pkp && (
+
+      {/* Session Signatures 显示 */}
+      {sessionSignatures && (
         <div className="boxed-code-display">
           <div className="boxed-code-display__container">
-            <h2 className="boxed-code-display__title">PKP:</h2>
+            <h2 className="boxed-code-display__title">✍️ Session Signatures:</h2>
             <pre className="boxed-code-display__content">
-              {JSON.stringify(pkp, null, 2)}
+              {JSON.stringify(sessionSignatures, null, 2)}
             </pre>
           </div>
         </div>
@@ -147,4 +275,5 @@ function App() {
     </div>
   );
 }
+
 export default App;

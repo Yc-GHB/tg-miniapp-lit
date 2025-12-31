@@ -1,21 +1,13 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { MetaMaskProvider } from "@metamask/sdk-react";
 import App from './App.tsx';
 import './index.css';
 
+// 初始化 AppKit（只需导入配置文件即可）
+import './wallet/config';
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <MetaMaskProvider
-      debug={false}
-      sdkOptions={{
-        dappMetadata: {
-          name: "Lit Telegram Mini App",
-          url: window.location.href,
-        },
-      }}
-    >
-      <App />
-    </MetaMaskProvider>
+    <App />
   </StrictMode>,
 );
