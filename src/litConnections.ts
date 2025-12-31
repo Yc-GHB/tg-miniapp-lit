@@ -22,8 +22,9 @@ export const connectToLitNodes = async () => {
 };
 
 async function setupLitContracts(provider: any) {
-  await provider.send("eth_requestAccounts", []);
+  // 在 ethers v6 中，BrowserProvider 接受 EIP-1193 provider
   const ethersProvider = new ethers.BrowserProvider(provider);
+  // 直接获取 signer，ethers 会自动处理必要的请求
   const signer = await ethersProvider.getSigner();
 
   const litContracts = new LitContracts({
