@@ -37,7 +37,7 @@ const ethers5Adapter = new Ethers5Adapter();
 // 5. 创建 AppKit 实例
 export const appKit = createAppKit({
   adapters: [ethers5Adapter],
-  networks: [mainnet, sepolia, polygon, bsc, arbitrum],
+  networks: [yellowstone,mainnet, sepolia, polygon, bsc, arbitrum],
   metadata,
   projectId,
   features: {
