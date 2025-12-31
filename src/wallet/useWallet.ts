@@ -1,13 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
-import { BrowserProvider, JsonRpcSigner } from 'ethers';
+import { providers } from 'ethers';
 import { appKit } from './config';
 
 interface WalletState {
   isConnected: boolean;
   address: string | null;
   chainId: number | null;
-  provider: BrowserProvider | null;
-  signer: JsonRpcSigner | null;
+  provider: providers.Web3Provider | null;
+  signer: providers.JsonRpcSigner | null;
 }
 
 export function useWallet() {
@@ -26,16 +26,16 @@ export function useWallet() {
       const walletProvider = appKit.getWalletProvider();
       
       if (walletProvider) {
-        const provider = new BrowserProvider(walletProvider as any);
+        const provider = new providers.Web3Provider(walletProvider as any);
         const accounts = await provider.listAccounts();
         
         if (accounts.length > 0) {
-          const signer = await provider.getSigner();
+          const signer = provider.getSigner();
           const network = await provider.getNetwork();
           
           setState({
             isConnected: true,
-            address: accounts[0].address,
+            address: accounts[0],
             chainId: Number(network.chainId),
             provider,
             signer,

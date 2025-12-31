@@ -6,6 +6,7 @@ import {
   LitActionResource,
 } from "@lit-protocol/auth-helpers";
 import Hash from "typestub-ipfs-only-hash";
+import { ethers } from "ethers";
 
 import { litActionCode } from "./litAction";
 
@@ -20,15 +21,13 @@ export const connectToLitNodes = async () => {
   return litNodeClient;
 };
 
-import * as ethersV5 from "ethers-v5";
-
 async function setupLitContracts(provider: any) {
   // LitContracts v7 必须使用 ethers v5 的 Signer/Provider
-  const ethersV5Provider = new ethersV5.providers.Web3Provider(provider);
-  const signer = ethersV5Provider.getSigner();
+  const ethersProvider = new ethers.providers.Web3Provider(provider);
+  const signer = ethersProvider.getSigner();
 
   const litContracts = new LitContracts({
-    signer: signer as any,
+    signer,
     network: LIT_NET,
   });
   await litContracts.connect();

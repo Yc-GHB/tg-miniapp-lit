@@ -1,5 +1,5 @@
 import { createAppKit } from '@reown/appkit';
-import { EthersAdapter } from '@reown/appkit-adapter-ethers';
+import { Ethers5Adapter } from '@reown/appkit-adapter-ethers5';
 import { mainnet, sepolia, polygon, bsc, arbitrum } from '@reown/appkit/networks';
 
 // 1. 获取 projectId - 需要在 https://cloud.reown.com 注册获取
@@ -17,11 +17,11 @@ const metadata = {
 };
 
 // 4. 创建 Ethers adapter
-const ethersAdapter = new EthersAdapter();
+const ethers5Adapter = new Ethers5Adapter();
 
 // 5. 创建 AppKit 实例
 export const appKit = createAppKit({
-  adapters: [ethersAdapter],
+  adapters: [ethers5Adapter],
   networks: [mainnet, sepolia, polygon, bsc, arbitrum],
   metadata,
   projectId,
