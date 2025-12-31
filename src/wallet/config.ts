@@ -2,11 +2,26 @@ import { createAppKit } from '@reown/appkit';
 import { Ethers5Adapter } from '@reown/appkit-adapter-ethers5';
 import { mainnet, sepolia, polygon, bsc, arbitrum } from '@reown/appkit/networks';
 
+// 定义 Chronicle Yellowstone 网络 (Lit Protocol 测试网)
+const yellowstone = {
+  id: 175177,
+  name: 'Chronicle Yellowstone',
+  network: 'chronicle-yellowstone',
+  nativeCurrency: { name: 'tLIT', symbol: 'tLIT', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['https://yellowstone-rpc.getlit.dev/'] },
+    public: { http: ['https://yellowstone-rpc.getlit.dev/'] },
+  },
+  blockExplorers: {
+    default: { name: 'Explorer', url: 'https://yellowstone-explorer.getlit.dev/' },
+  },
+} as const;
+
 // 1. 获取 projectId - 需要在 https://cloud.reown.com 注册获取
 const projectId = import.meta.env.VITE_REOWN_PROJECT_ID || 'ab7ef5ef0be6d6e1ada8554df0dcf37d';
 
 // 2. 设置支持的网络 - 使用元组类型
-export const networks = [mainnet, sepolia, polygon, bsc, arbitrum] as const;
+export const networks = [yellowstone, mainnet, sepolia, polygon, bsc, arbitrum] as const;
 
 // 3. 创建 metadata
 const metadata = {
