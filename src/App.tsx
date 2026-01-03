@@ -110,8 +110,23 @@ function App() {
     setError(null);
 
     try {
-      // 获取底层 provider 用于 Lit Protocol
+      // 检查网络：Lit Datil-test (Yellowstone) 的 Chain ID 是 175188
+      const currentChainId = appKit.getChainId();
+      if (currentChainId !== 175188) {
+        setError("请先切换到 Chronicle Yellowstone 网络");
+        // 尝试自动弹出切换网络弹窗
+        await appKit.switchNetwork(175188 as any);
+        setIsLoading(false);
+        return;
+      }
+
+      // 获取当前最新的底层 provider
       const walletProvider = appKit.getWalletProvider();
+      if (!walletProvider) {
+        throw new Error("找不到钱包连接，请重新连接");
+      }
+
+      console.log("Starting mint with provider...", walletProvider);
       const pkp = await mintNewPkp(walletProvider);
       setPkp(pkp);
 

@@ -1,7 +1,9 @@
 .App {
   text-align: center;
   min-height: 100vh;
+  width: 100%;
   padding: 20px;
+  box-sizing: border-box;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   color: #ffffff;
 }

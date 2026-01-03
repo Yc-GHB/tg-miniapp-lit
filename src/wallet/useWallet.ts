@@ -20,37 +20,34 @@ export function useWallet() {
   });
   const [isLoading, setIsLoading] = useState(false);
 
+  // 确保在 updateWalletState 中能获取到最新的状态
   const updateWalletState = useCallback(async () => {
     try {
-      // 获取 provider
       const walletProvider = appKit.getWalletProvider();
+      const account = appKit.getAddress();
+      // const state = appKit.getState();
+      const networkId = appKit.getChainId();
       
-      if (walletProvider) {
+      if (walletProvider && account) {
         const provider = new providers.Web3Provider(walletProvider as any);
-        const accounts = await provider.listAccounts();
+        const signer = provider.getSigner();
         
-        if (accounts.length > 0) {
-          const signer = provider.getSigner();
-          const network = await provider.getNetwork();
-          
-          setState({
-            isConnected: true,
-            address: accounts[0],
-            chainId: Number(network.chainId),
-            provider,
-            signer,
-          });
-          return;
-        }
+        setState({
+          isConnected: true,
+          address: account,
+          chainId: networkId ? Number(networkId) : null,
+          provider,
+          signer,
+        });
+      } else {
+        setState({
+          isConnected: false,
+          address: null,
+          chainId: null,
+          provider: null,
+          signer: null,
+        });
       }
-
-      setState({
-        isConnected: false,
-        address: null,
-        chainId: null,
-        provider: null,
-        signer: null,
-      });
     } catch (error) {
       console.error('Error updating wallet state:', error);
     }
@@ -58,17 +55,18 @@ export function useWallet() {
 
   // 监听钱包事件
   useEffect(() => {
-    // 初始化状态
     updateWalletState();
 
-    // 监听连接状态变化
-    const unsubscribe = appKit.subscribeState((newState) => {
-      console.log('AppKit state changed:', newState);
-      updateWalletState();
-    });
+    // AppKit 的订阅函数返回的是一个取消订阅的函数对象或方法
+    const unsubsAccount = appKit.subscribeAccount(() => updateWalletState());
+    const unsubsNetwork = appKit.subscribeNetwork(() => updateWalletState());
+    const unsubsState = appKit.subscribeState(() => updateWalletState());
 
     return () => {
-      unsubscribe();
+      // 检查并在件卸载时取消订阅
+      if (typeof unsubsAccount === 'function') (unsubsAccount as any)();
+      if (typeof unsubsNetwork === 'function') (unsubsNetwork as any)();
+      if (typeof unsubsState === 'function') (unsubsState as any)();
     };
   }, [updateWalletState]);
 
