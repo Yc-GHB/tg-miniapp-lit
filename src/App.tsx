@@ -11,7 +11,7 @@ import {
   isRecent,
   verifyInitData,
 } from "./telegramAuthHelpers";
-import { useWallet, appKit } from "./wallet";
+import { useWallet, walletConnector } from "./wallet";
 
 interface TelegramWebApp {
   ready: () => void;
@@ -21,14 +21,6 @@ interface TelegramWebApp {
     buttons: Array<{ text: string; type: string }>;
   }) => void;
   initData: string;
-}
-
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp?: TelegramWebApp;
-    };
-  }
 }
 
 function App() {
@@ -111,23 +103,22 @@ function App() {
 
     try {
       // 检查网络：Lit Datil-test (Yellowstone) 的 Chain ID 是 175188
-      const currentChainId = appKit.getChainId();
+      const currentChainId = walletConnector.getChainId();
       if (currentChainId !== 175188) {
         setError("请先切换到 Chronicle Yellowstone 网络");
-        // 尝试自动弹出切换网络弹窗
-        await appKit.switchNetwork(175188 as any);
+        // 尝试自动切换网络
+        await walletConnector.switchNetwork(175188);
         setIsLoading(false);
         return;
       }
 
-      // 获取当前最新的底层 provider
-      const walletProvider = appKit.getWalletProvider();
-      if (!walletProvider) {
+      // 获取当前最新的底层 provider (使用 window.ethereum)
+      if (!window.ethereum) {
         throw new Error("找不到钱包连接，请重新连接");
       }
 
-      console.log("Starting mint with provider...", walletProvider);
-      const pkp = await mintNewPkp(walletProvider);
+      console.log("Starting mint with provider...", window.ethereum);
+      const pkp = await mintNewPkp(window.ethereum);
       setPkp(pkp);
 
       if (webApp) {
@@ -156,11 +147,14 @@ function App() {
 
     try {
       const litNodeClient = await connectToLitNodes();
-      const walletProvider = appKit.getWalletProvider();
+      // 使用 window.ethereum 作为 provider
+      if (!window.ethereum) {
+        throw new Error("找不到钱包连接，请重新连接");
+      }
       const sessionSignatures = await getSessionSignatures(
         litNodeClient,
         pkp,
-        walletProvider,
+        window.ethereum,
         data
       );
       setSessionSignatures(sessionSignatures);
@@ -236,9 +230,6 @@ function App() {
             </button>
           </div>
         )}
-
-        {/* AppKit 内置的连接按钮组件 */}
-        <appkit-button />
       </div>
 
       {/* PKP 操作区域 */}

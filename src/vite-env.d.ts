@@ -1,11 +1,16 @@
 /// <reference types="vite/client" />
 
-// AppKit Web Component 类型声明
-declare namespace JSX {
-  interface IntrinsicElements {
-    'appkit-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
-    'appkit-network-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
-    'appkit-connect-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
-    'appkit-account-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
-  }
+// 钱包 provider 类型声明
+interface Window {
+  ethereum?: {
+    request: (args: { method: string; params?: any[] }) => Promise<any>;
+    on: (event: string, handler: (...args: any[]) => void) => void;
+    removeListener: (event: string, handler: (...args: any[]) => void) => void;
+    isMetaMask?: boolean;
+    isCoinbaseWallet?: boolean;
+    isOkxWallet?: boolean;
+  };
+  Telegram?: {
+    WebApp?: any;
+  };
 }

@@ -1,2 +1,2 @@
-export { appKit, openConnectModal, disconnect, networks } from './config';
+export { walletConnector } from './walletConnect';
 export { useWallet } from './useWallet';
