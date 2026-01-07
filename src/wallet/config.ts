@@ -1,6 +1,6 @@
 import { createAppKit } from '@reown/appkit';
 import { Ethers5Adapter } from '@reown/appkit-adapter-ethers5';
-import { mainnet, sepolia } from '@reown/appkit/networks';
+// import { mainnet, sepolia } from '@reown/appkit/networks';
 
 // 定义 Chronicle Yellowstone 网络 (Lit Protocol 测试网)
 const yellowstone = {
