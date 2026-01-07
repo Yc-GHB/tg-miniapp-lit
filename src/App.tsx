@@ -11,7 +11,7 @@ import {
   isRecent,
   verifyInitData,
 } from "./telegramAuthHelpers";
-import { useWallet, walletConnector } from "./wallet";
+import { useWallet, appKit } from "./wallet";
 
 interface TelegramWebApp {
   ready: () => void;
@@ -103,23 +103,23 @@ function App() {
 
     try {
       // 检查网络：Lit Datil-test (Yellowstone) 的 Chain ID 是 175188
-      const currentChainId = walletConnector.getChainId();
+      const currentChainId = appKit.getChainId();
       if (currentChainId !== 175188) {
         setError("请先切换到 Chronicle Yellowstone 网络");
         // 尝试自动切换网络
-        await walletConnector.switchNetwork(175188);
+        await appKit.switchNetwork(175188 as any);
         setIsLoading(false);
         return;
       }
 
-      // 获取原始 provider（支持 window.ethereum 或 WalletConnect）
-      const rawProvider = walletConnector.getRawProvider();
-      if (!rawProvider) {
+      // 获取 AppKit 的 provider
+      const walletProvider = appKit.getWalletProvider();
+      if (!walletProvider) {
         throw new Error("找不到钱包连接，请重新连接");
       }
 
-      console.log("Starting mint with provider...", rawProvider);
-      const pkp = await mintNewPkp(rawProvider);
+      console.log("Starting mint with provider...", walletProvider);
+      const pkp = await mintNewPkp(walletProvider);
       setPkp(pkp);
 
       if (webApp) {
@@ -148,15 +148,15 @@ function App() {
 
     try {
       const litNodeClient = await connectToLitNodes();
-      // 获取原始 provider（支持 window.ethereum 或 WalletConnect）
-      const rawProvider = walletConnector.getRawProvider();
-      if (!rawProvider) {
+      // 使用 AppKit 的 provider
+      const walletProvider = appKit.getWalletProvider();
+      if (!walletProvider) {
         throw new Error("找不到钱包连接，请重新连接");
       }
       const sessionSignatures = await getSessionSignatures(
         litNodeClient,
         pkp,
-        rawProvider,
+        walletProvider,
         data
       );
       setSessionSignatures(sessionSignatures);
@@ -232,6 +232,9 @@ function App() {
             </button>
           </div>
         )}
+
+        {/* AppKit 内置的连接按钮组件 */}
+        <appkit-button />
       </div>
 
       {/* PKP 操作区域 */}
