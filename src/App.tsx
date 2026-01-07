@@ -112,13 +112,14 @@ function App() {
         return;
       }
 
-      // 获取当前最新的底层 provider (使用 window.ethereum)
-      if (!window.ethereum) {
+      // 获取原始 provider（支持 window.ethereum 或 WalletConnect）
+      const rawProvider = walletConnector.getRawProvider();
+      if (!rawProvider) {
         throw new Error("找不到钱包连接，请重新连接");
       }
 
-      console.log("Starting mint with provider...", window.ethereum);
-      const pkp = await mintNewPkp(window.ethereum);
+      console.log("Starting mint with provider...", rawProvider);
+      const pkp = await mintNewPkp(rawProvider);
       setPkp(pkp);
 
       if (webApp) {
@@ -147,14 +148,15 @@ function App() {
 
     try {
       const litNodeClient = await connectToLitNodes();
-      // 使用 window.ethereum 作为 provider
-      if (!window.ethereum) {
+      // 获取原始 provider（支持 window.ethereum 或 WalletConnect）
+      const rawProvider = walletConnector.getRawProvider();
+      if (!rawProvider) {
         throw new Error("找不到钱包连接，请重新连接");
       }
       const sessionSignatures = await getSessionSignatures(
         litNodeClient,
         pkp,
-        window.ethereum,
+        rawProvider,
         data
       );
       setSessionSignatures(sessionSignatures);
